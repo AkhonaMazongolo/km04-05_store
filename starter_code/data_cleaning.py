@@ -64,8 +64,19 @@ def clean_products(products_df: "pd.DataFrame") -> "pd.DataFrame":
     Returns:
         A cleaned copy of the DataFrame. Do not modify products_df in place.
     """
-    # TODO: implement the cleaning steps described above.
-    raise NotImplementedError
+    clean_df = products_df.copy()
+    clean_df = clean_df.drop_duplicates()
+    
+    clean_df["product_id"] = clean_df["product_id"].astype("string").str.strip()
+    clean_df["product_name"] = clean_df["product_name"].astype("string").str.strip()
+    clean_df["category"] = clean_df["category"].astype("string").str.strip().str.title()
+    clean_df["unit_price"] = pd.to_numeric(clean_df["unit_price"], errors="coerce")
+    
+    clean_df = clean_df.dropna(subset=["product_id", "product_name", "unit_price"])
+    clean_df = clean_df[
+            clean_df["product_id"].ne("") & clean_df["product_name"].ne("")
+        ]
+    return clean_df.reset_index(drop=True)
 
 
 def clean_sales(sales_df: "pd.DataFrame", valid_product_ids) -> "pd.DataFrame":
