@@ -106,8 +106,39 @@ def clean_sales(sales_df: "pd.DataFrame", valid_product_ids) -> "pd.DataFrame":
         column (as a string in YYYY-MM-DD format) and no missing values
         in quantity or product_id.
     """
-    # TODO: implement the cleaning steps described above.
-    raise NotImplementedError
+    clean_df = sales_df.copy()
+    clean_df = clean_df.drop_duplicates()
+    
+    clean_df["product_id"] = clean_df["product_id"].astype("string").str.strip()
+    clean_df["quantity"] = pd.to_numeric(clean_df["quantity"], errors="coerce")
+    
+    raw_dates = clean_df["sale_date"].astype("string").str.strip()
+    parsed_dates = pd.Series(pd.NaT, index=clean_df.index, dtype="datetime64[ns]")
+    date_formats = ("%Y-%m-%d", "%d/%m/%Y", "%Y/%m/%d", "%d-%m-%Y")
+    for date_format in date_formats:
+        unparsed = parsed_dates.isna() & raw_dates.notna()
+        parsed_dates.loc[unparsed] = pd.to_datetime(
+            raw_dates.loc[unparsed], format=date_format, errors="coerce"
+        )
+    clean_df["sale_date"] = parsed_dates.dt.strftime("%Y-%m-%d")
+    
+    clean_df["payment_method"] = (
+        clean_df["payment_method"]
+        .astype("string")
+        .str.strip()
+        .replace("", pd.NA)
+        .fillna("Unknown")
+        )
+    
+    valid_ids = {
+        str(product_id).strip()
+        for product_id in valid_product_ids
+        if pd.notna(product_id)
+        }
+    clean_df = clean_df.dropna(subset=["sale_date", "quantity", "product_id"])
+    clean_df = clean_df[clean_df["product_id"].isin(valid_ids)]
+    clean_df["quantity"] = clean_df["quantity"].astype(int)
+    return clean_df.reset_index(drop=True)
 
 
 def cleaning_summary(raw_df: "pd.DataFrame", clean_df: "pd.DataFrame", name: str) -> str:
@@ -119,5 +150,5 @@ def cleaning_summary(raw_df: "pd.DataFrame", clean_df: "pd.DataFrame", name: str
     Example output:
         "products: 16 raw rows -> 14 clean rows (2 removed)"
     """
-    # TODO: compare len(raw_df) and len(clean_df) and format a message.
-    raise NotImplementedError
+    removed = len(raw_df) - len(clean_df)
+    return f"{name}: {len(raw_df)} raw rows -> {len(clean_df)} clean rows ({removed} removed)"
