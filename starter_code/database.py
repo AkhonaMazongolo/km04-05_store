@@ -27,8 +27,7 @@ def get_connection(db_path: str = "store.db") -> sqlite3.Connection:
     Returns:
         an open sqlite3.Connection
     """
-    # TODO: return sqlite3.connect(db_path)
-    raise NotImplementedError
+    return sqlite3.connect(db_path)
 
 
 def create_tables(conn: sqlite3.Connection) -> None:
@@ -51,13 +50,32 @@ def create_tables(conn: sqlite3.Connection) -> None:
         - sale_date      TEXT   (store as 'YYYY-MM-DD')
         - payment_method TEXT
         - customer_type  TEXT
-
-    TODO:
-        Write two CREATE TABLE IF NOT EXISTS statements (one per table)
-        and execute them using conn.execute(...). Remember to call
-        conn.commit() at the end.
     """
-    raise NotImplementedError
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS products (
+            product_id TEXT PRIMARY KEY,
+            product_name TEXT NOT NULL,
+            category TEXT,
+            unit_price REAL
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sales (
+            sale_id TEXT PRIMARY KEY,
+            product_id TEXT,
+            quantity INTEGER,
+            sale_date TEXT,
+            payment_method TEXT,
+            customer_type TEXT,
+            FOREIGN KEY (product_id) REFERENCES products(product_id)
+        )
+        """
+    )
+    conn.commit()  
 
 
 def insert_products(conn: sqlite3.Connection, products_df) -> None:
