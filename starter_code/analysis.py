@@ -26,12 +26,11 @@ def total_sales_records(sales_rows: list) -> int:
     Returns:
         the total number of records, as an integer, counted with a loop.
     """
-    # TODO:
-    #   count = 0
-    #   for row in sales_rows:
-    #       count += 1
-    #   return count
-    raise NotImplementedError
+
+    count = 0
+    for row in sales_rows:
+        count += 1
+    return count
 
 
 def low_stock_alert(products_rows: list, threshold: int = 5) -> list:
@@ -48,13 +47,14 @@ def low_stock_alert(products_rows: list, threshold: int = 5) -> list:
     Returns:
         a list of product_name strings that need re-ordering.
     """
-    # TODO:
-    #   alerts = []
-    #   for product in products_rows:
-    #       if product["in_stock"] is False:   # or == "False", check your data type
-    #           alerts.append(product["product_name"])
-    #   return alerts
-    raise NotImplementedError
+    alerts = []
+    for product in products_rows:
+        in_stock = product["in_stock"]
+        if isinstance(in_stock, str):
+            in_stock = in_stock.strip().lower() == "true"
+        if in_stock is False:
+            alerts.append(product["product_name"])
+    return alerts
 
 
 def monthly_sales_trend(sales_rows: list) -> dict:
@@ -70,17 +70,20 @@ def monthly_sales_trend(sales_rows: list) -> dict:
     Returns:
         a dict like {"2026-01": 143, "2026-02": 97}
 
-    TODO:
-        trend = {}
-        for row in sales_rows:
-            month = row["sale_date"][:7]        # "YYYY-MM"
-            if month in trend:
-                trend[month] += row["quantity"]
-            else:
-                trend[month] = row["quantity"]
-        return trend
     """
-    raise NotImplementedError
+    trend = {}
+    for row in sales_rows:
+        month = row["sale_date"][:7]
+        quantity = int(row["quantity"])
+        if month in trend:
+            trend[month] += quantity
+        else:
+            trend[month] = quantity
+
+    sorted_trend = {}
+    for month in sorted(trend):
+        sorted_trend[month] = trend[month]
+    return sorted_trend
 
 
 def classify_transaction_size(quantity: int) -> str:
@@ -95,7 +98,18 @@ def classify_transaction_size(quantity: int) -> str:
 
     TODO: implement the if / elif / else chain above.
     """
-    raise NotImplementedError
+    try:
+        quantity = int(quantity)
+    except (TypeError, ValueError):
+        return "Invalid"
+
+    if quantity >= 5:
+        return "Bulk"
+    if quantity >= 2:
+        return "Multiple"
+    if quantity == 1:
+        return "Single"
+    return "Invalid"
 
 
 def average_basket_size(sales_rows: list) -> float:
@@ -106,10 +120,11 @@ def average_basket_size(sales_rows: list) -> float:
     Returns:
         a float rounded to 2 decimal places.
 
-    TODO:
-        total = 0
-        for row in sales_rows:
-            total += row["quantity"]
-        return round(total / len(sales_rows), 2)
     """
-    raise NotImplementedError
+    if len(sales_rows) == 0:
+        return 0.0
+
+    total = 0
+    for row in sales_rows:
+        total += int(row["quantity"])
+    return round(total / len(sales_rows), 2)
