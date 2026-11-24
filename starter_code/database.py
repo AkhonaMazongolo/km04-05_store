@@ -83,21 +83,52 @@ def insert_products(conn: sqlite3.Connection, products_df) -> None:
     Insert every row of the cleaned products DataFrame into the
     products table.
 
-    TODO:
-        Loop through products_df.itertuples() (or use
-        products_df.to_sql("products", conn, if_exists="append", index=False))
-        and insert each row. Remember conn.commit().
     """
-    raise NotImplementedError
+    rows = [
+        (
+            row.product_id,
+            row.product_name,
+            row.category,
+            row.unit_price,
+        )
+        for row in products_df.itertuples(index=False)
+    ]
+    conn.executemany(
+        """
+        INSERT OR REPLACE INTO products
+            (product_id, product_name, category, unit_price)
+        VALUES (?, ?, ?, ?)
+        """,
+        rows,
+    )
+    conn.commit()
 
 
 def insert_sales(conn: sqlite3.Connection, sales_df) -> None:
     """
     Insert every row of the cleaned sales DataFrame into the sales table.
 
-    TODO: same approach as insert_products().
     """
-    raise NotImplementedError
+    rows = [
+        (
+            row.sale_id,
+            row.product_id,
+            row.quantity,
+            row.sale_date,
+            row.payment_method,
+            row.customer_type,
+        )
+        for row in sales_df.itertuples(index=False)
+    ]
+    conn.executemany(
+        """
+        INSERT OR REPLACE INTO sales
+            (sale_id, product_id, quantity, sale_date, payment_method, customer_type)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        rows,
+    )
+    conn.commit()
 
 
 # ---------------------------------------------------------------------
