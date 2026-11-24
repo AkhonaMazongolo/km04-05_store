@@ -143,14 +143,16 @@ def query_total_revenue_per_product(conn: sqlite3.Connection):
     (quantity * unit_price, summed across all its sales),
     highest revenue first.
 
-    TODO: write a SQL query that JOINS sales to products on product_id,
-    multiplies quantity * unit_price, and uses SUM() with GROUP BY.
-    Execute it with conn.execute(sql) and return conn.execute(sql).fetchall()
     """
     sql = """
-    -- TODO: write your JOIN + GROUP BY + SUM query here
+    SELECT p.product_name, ROUND(SUM(s.quantity * p.unit_price), 2) AS total_revenue
+    FROM sales s
+    JOIN products p ON s.product_id = p.product_id
+    GROUP BY p.product_name
+    ORDER BY total_revenue DESC
     """
-    raise NotImplementedError
+    cursor = conn.execute(sql)
+    return cursor.fetchall()
 
 
 def query_best_selling_product(conn: sqlite3.Connection):
@@ -160,9 +162,15 @@ def query_best_selling_product(conn: sqlite3.Connection):
     TODO: SUM(quantity) grouped by product, ORDER BY that sum DESC, LIMIT 1.
     """
     sql = """
-    -- TODO
+        SELECT p.product_name,
+               SUM(s.quantity) AS total_quantity
+        FROM sales AS s
+        JOIN products AS p ON s.product_id = p.product_id
+        GROUP BY p.product_id, p.product_name
+        ORDER BY total_quantity DESC
+        LIMIT 1
     """
-    raise NotImplementedError
+    return conn.execute(sql).fetchall()
 
 
 def query_sales_by_payment_method(conn: sqlite3.Connection):
@@ -172,26 +180,45 @@ def query_sales_by_payment_method(conn: sqlite3.Connection):
     TODO: COUNT(*) grouped by payment_method.
     """
     sql = """
-    -- TODO
+    SELECT payment_method, COUNT(*) AS transaction_count
+    FROM sales
+    GROUP BY payment_method
+    ORDER BY transaction_count DESC, payment_method
     """
-    raise NotImplementedError
+    return conn.execute(sql).fetchall()
 
 
 def query_custom_one(conn: sqlite3.Connection):
     """
-    Your own SQL query #1. Pick a business question that interests you,
-    e.g. "Which category earns the most revenue?" or "How many sales
-    were made to Regular customers vs Walk-in customers?"
+    Answer: Which product category earns the most revenue?
 
-    Document the question you chose as the docstring above your SQL.
+    Joins sales to products, sums quantity times unit price, and ranks
+    categories from highest to lowest revenue.
     """
-    raise NotImplementedError
+    sql = """
+    SELECT p.category,
+           ROUND(SUM(s.quantity * p.unit_price), 2) AS category_revenue
+    FROM sales AS s
+    JOIN products AS p ON s.product_id = p.product_id
+    GROUP BY p.category
+    ORDER BY category_revenue DESC
+    """
+    return conn.execute(sql).fetchall()
 
 
 def query_custom_two(conn: sqlite3.Connection):
     """
-    Your own SQL query #2. Choose a different type of question from
-    query_custom_one (e.g. use a WHERE filter, or a date range,
-    or a HAVING clause).
+    Answer: What is the average basket quantity for Regular and Walk-in
+    customers?
+
+    Uses AVG() and WHERE to group only named customer types.
     """
-    raise NotImplementedError
+    sql = """
+    SELECT customer_type,
+           ROUND(AVG(quantity), 2) AS average_quantity
+    FROM sales
+    WHERE customer_type IS NOT NULL
+    GROUP BY customer_type
+    ORDER BY average_quantity DESC
+    """
+    return conn.execute(sql).fetchall()
