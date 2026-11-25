@@ -86,9 +86,6 @@ def login_gate(stored_hash: str, max_attempts: int = 3) -> bool:
         print("Access denied — too many failed attempts.")
         return False
     """
-    if max_attempts < 1:
-        print("Access denied — too many failed attempts.")
-        return False
 
     for attempt_number in range(max_attempts):
         attempt = getpass.getpass("Enter password to view reports: ")
