@@ -18,13 +18,13 @@ IMPORTANT SECURITY LESSON (this is the whole point of the task):
 
 import hashlib
 import getpass
+import hmac
 
 
 # In a real system this would live in a database, not in code.
 # For this project, one hardcoded hash is fine — but note in your
 # README why storing it in the database (KM-04 idea) would be better
 # than hardcoding it here.
-STORED_PASSWORD_HASH = None  # TODO: set this using hash_password() below
 
 
 def hash_password(plain_text_password: str) -> str:
@@ -42,7 +42,7 @@ def hash_password(plain_text_password: str) -> str:
     TODO:
         return hashlib.sha256(plain_text_password.encode()).hexdigest()
     """
-    raise NotImplementedError
+    return hashlib.sha256(plain_text_password.encode("utf-8")).hexdigest()
 
 
 def check_password(attempt: str, stored_hash: str) -> bool:
@@ -60,7 +60,10 @@ def check_password(attempt: str, stored_hash: str) -> bool:
     TODO:
         return hash_password(attempt) == stored_hash
     """
-    raise NotImplementedError
+    if not isinstance(stored_hash, str):
+        return False
+    attempt_hash = hash_password(attempt)
+    return hmac.compare_digest(attempt_hash, stored_hash)
 
 
 def login_gate(stored_hash: str, max_attempts: int = 3) -> bool:
@@ -83,8 +86,21 @@ def login_gate(stored_hash: str, max_attempts: int = 3) -> bool:
         print("Access denied — too many failed attempts.")
         return False
     """
-    raise NotImplementedError
+    if max_attempts < 1:
+        print("Access denied — too many failed attempts.")
+        return False
 
+    for attempt_number in range(max_attempts):
+        attempt = getpass.getpass("Enter password to view reports: ")
+        if check_password(attempt, stored_hash):
+            print("Access granted.")
+            return True
+        print("Incorrect password. Try again.")
+
+    print("Access denied — too many failed attempts.")
+    return False
+
+STORED_PASSWORD_HASH = hash_password("letmein")  # Demo password
 
 # ---------------------------------------------------------------------
 # REFLECTION (answer in your README, not in code):
